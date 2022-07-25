@@ -1,21 +1,68 @@
-import { StatusBar } from 'expo-status-bar';
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {View, Alert } from 'react-native';
+import styles from "./styles";
+import questions from './assets/data/allQuestions';
+import ImageMultipleChoiceQuestion from './src/components/ImageMultipleChoiceQuestion/ImageMultipleChoiceQuestion';
+import OpenEndedQuestion from './src/components/OpenEndedQuestion/OpenEndedQuestion';
+import Header from './src/components/Header';
 
-export default function App() {
-  return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
-  );
-}
+const App = () => {
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+  const [ currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [ currentQuestion, setCurrentQuestion ] = useState(questions[currentQuestionIndex]);
+
+  const [ lives, setLives ] = useState(5);
+
+  useEffect(() => {
+    if (currentQuestionIndex >= questions.length) {
+      Alert.alert("You won");
+      setCurrentQuestionIndex(0);
+    } else {
+    setCurrentQuestion(questions[currentQuestionIndex])
+    }
+  }, [currentQuestionIndex])
+
+  const onCorrect = () => {
+    setCurrentQuestionIndex(currentQuestionIndex + 1);
+  }
+
+  const restart = () => {
+    setLives(5);
+    setCurrentQuestionIndex(0);
+  }
+
+  const onWrong = () => {
+    if (lives <= 1) {
+      Alert.alert('Game Over', 'Try again', [
+        {
+          text: 'Try again',
+          onPress: restart
+        }
+      ])
+    } else {
+      Alert.alert("Wrong!");
+    }
+    setLives(lives -1)
+  }
+
+    return (
+
+        <View style={styles.root}>
+          <Header progress={currentQuestionIndex / questions.length} lives={lives}/>
+          { currentQuestion.type === 'IMAGE_MULTIPLE_CHOICE' && (
+          <ImageMultipleChoiceQuestion 
+            question={currentQuestion}
+            onCorrect={onCorrect}
+            onWrong={onWrong}
+          />)}
+          { currentQuestion.type === 'OPEN_ENDED' && (
+          <OpenEndedQuestion
+            question={currentQuestion}
+            onCorrect={onCorrect}
+            onWrong={onWrong}
+          />)}
+        </View>
+    );
+  };
+
+export default App; 
